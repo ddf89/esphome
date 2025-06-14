@@ -7,6 +7,9 @@ CODEOWNERS = ["@ddf89"]
 electra_ns = cg.esphome_ns.namespace("electra")
 ElectraClimate = electra_ns.class_("ElectraClimate", climate_ir.ClimateIR)
 
+CONF_ELECTRA_ID = "electra_id"
+CONF_IFEEL = "ifeel"
+
 CONFIG_SCHEMA = climate_ir.climate_ir_with_receiver_schema(ElectraClimate)
 
 

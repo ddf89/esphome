@@ -20,16 +20,16 @@ class ElectraClimate : public climate_ir::ClimateIR {
                               {climate::CLIMATE_PRESET_BOOST, climate::CLIMATE_PRESET_NONE}) {
                                 ac = new IRElectraAc(0);
                               }
+  void setup() override;
+  void setIFeel(bool state);
 
  protected:
   IRElectraAc *ac;
   // climate::ClimateTraits traits() override;
   void transmit_state() override;
-  void transmit_sensor_update();
 
- public:
-  void setup() override;
-  // bool on_receive(remote_base::RemoteReceiveData data) override;
+ private:
+  void do_transmit(bool sensor_update);
 };
 
 }  // namespace electra

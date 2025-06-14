@@ -23,60 +23,25 @@ void ElectraClimate::setup() {
   if (this->sensor_) {
     this->sensor_->add_on_state_callback([this](float state) {
       this->current_temperature = state;
-      this->transmit_sensor_update();
+
+      if (this->mode == climate::CLIMATE_MODE_OFF) {
+        return;
+      }
+
+      this->do_transmit(true);
+
+      this->ac->setSensorUpdate(false);
     });
   }
 }
 
-void ElectraClimate::transmit_sensor_update() {
-  if (this->mode == climate::CLIMATE_MODE_OFF) {
-    return;
-  }
-
-  uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
-  ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
-
-  ac->setSensorUpdate(true);
-  ac->setSensorTemp(t);
-
-  auto transmit = this->transmitter_->transmit();
-  auto *data = transmit.get_data();
-  data->set_carrier_frequency(38000);
-
-  uint8_t *message = this->ac->getRaw();
-
-  data->mark(kElectraAcHdrMark);
-  data->space(kElectraAcHdrSpace);
-
-  // Data
-  for (uint8_t i = 0; i < kElectraAcStateLength; i++)
-  {
-      uint8_t d = *(message + i);
-      for (uint8_t bit = 0; bit < 8; bit++, d >>= 1)
-      {
-          if (d & 1)
-          {
-              data->mark(kElectraAcBitMark);
-              data->space(kElectraAcOneSpace);
-          }
-          else
-          {
-              data->mark(kElectraAcBitMark);
-              data->space(kElectraAcZeroSpace);
-          }
-      }
-  }
-
-  // Footer
-  data->mark(kElectraAcBitMark);
-  data->space(kElectraAcMessageGap);
-
-  transmit.perform();
-  ac->setSensorUpdate(false);
+void ElectraClimate::transmit_state() {
+  this->do_transmit(false);
 }
 
-void ElectraClimate::transmit_state() {
+void ElectraClimate::do_transmit(bool sensor_update) {
   ac->stateReset();
+
   ac->setPower(true);
   ac->setIFeel(true);
 
@@ -140,6 +105,14 @@ void ElectraClimate::transmit_state() {
     ac->setSwingV(true);
   } else {
     ac->setSwingV(false);
+  }
+
+  if (sensor_update) {
+      uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
+      ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
+
+      ac->setSensorUpdate(true);
+      ac->setSensorTemp(t);
   }
 
   auto transmit = this->transmitter_->transmit();

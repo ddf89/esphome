@@ -1,8 +1,7 @@
-import esphome.codegen as cg
 from esphome.components import switch
 from esphome.const import ENTITY_CATEGORY_CONFIG, ICON_FAN
 
-from ..climate import CONF_ELECTRA_ID, CONF_IFEEL, CONFIG_SCHEMA, electra_ns
+from ..climate import CONFIG_SCHEMA, electra_ns
 
 CODEOWNERS = ["@ddf89"]
 
@@ -19,9 +18,4 @@ CONFIG_SCHEMA.add_extra(
 
 
 async def to_code(config):
-    parent = await cg.get_variable(config[CONF_ELECTRA_ID])
-
-    if conf := config.get(CONF_IFEEL):
-        sw_var = await switch.new_switch(conf)
-        await cg.register_parented(sw_var, parent)
-        cg.add(getattr(parent, f"set_{CONF_IFEEL}_switch")(sw_var))
+    await switch.new_switch(IFeelSwitch)

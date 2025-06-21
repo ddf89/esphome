@@ -19,6 +19,7 @@ class ElectraClimate : public climate_ir::ClimateIR {
                               {climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL},
                               {climate::CLIMATE_PRESET_BOOST, climate::CLIMATE_PRESET_NONE}) {
                                 ac = new IRElectraAc(0);
+                                poweredOn = false;
                               }
   void setup() override;
   void setIFeel(bool state);
@@ -30,6 +31,7 @@ class ElectraClimate : public climate_ir::ClimateIR {
 
  private:
   void do_transmit(bool sensor_update);
+  bool poweredOn;
 };
 
 }  // namespace electra

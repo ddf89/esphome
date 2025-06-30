@@ -24,13 +24,13 @@ void ElectraClimate::setup() {
     this->sensor_->add_on_state_callback([this](float state) {
       this->current_temperature = state;
 
-      if (this->mode == climate::CLIMATE_MODE_OFF) {
-        return;
-      }
+      // if (this->mode == climate::CLIMATE_MODE_OFF) {
+      //   return;
+      // }
 
-      ESP_LOGD(TAG, "temp sensor state callback");
+      // ESP_LOGD(TAG, "temp sensor state callback");
 
-      this->do_transmit(true);
+      // this->do_transmit(true);
     });
   }
 }

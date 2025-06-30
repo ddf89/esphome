@@ -20,21 +20,21 @@ const uint8_t kElectraAcStateLength = 13;
 
 void ElectraClimate::setup() {
   climate_ir::ClimateIR::setup();
-  if (this->sensor_) {
-    this->sensor_->add_on_state_callback([this](float state) {
-      this->current_temperature = state;
+  // if (this->sensor_) {
+  //   this->sensor_->add_on_state_callback([this](float state) {
+  //     this->current_temperature = state;
 
-      if (this->mode == climate::CLIMATE_MODE_OFF) {
-        return;
-      }
+  //     if (this->mode == climate::CLIMATE_MODE_OFF) {
+  //       return;
+  //     }
 
-      ESP_LOGD(TAG, "temp sensor state callback");
+  //     ESP_LOGD(TAG, "temp sensor state callback");
 
-      this->do_transmit(true);
+  //     this->do_transmit(true);
 
-      this->ac->setSensorUpdate(false);
-    });
-  }
+  //     this->ac->setSensorUpdate(false);
+  //   });
+  // }
 }
 
 void ElectraClimate::transmit_state() {
@@ -45,7 +45,6 @@ void ElectraClimate::do_transmit(bool sensor_update) {
   ac->stateReset();
 
   ac->setPower(true);
-  ac->setIFeel(true);
 
   // Set mode
   switch (this->mode) {
@@ -119,15 +118,19 @@ void ElectraClimate::do_transmit(bool sensor_update) {
       uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
       ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
 
+      ac->setIFeel(true);
       ac->setSensorUpdate(true);
       ac->setSensorTemp(t);
+  } else {
+      ac->setIFeel(false);
+      ac->setSensorUpdate(false);
   }
 
   auto transmit = this->transmitter_->transmit();
   auto *data = transmit.get_data();
   data->set_carrier_frequency(38000);
 
-  ESP_LOGD(TAG, "ac ir remote state %s", ac->toString());
+  ESP_LOGD(TAG, "ac ir remote state %s", this->ac->toString());
   uint8_t *message = this->ac->getRaw();
 
   data->mark(kElectraAcHdrMark);

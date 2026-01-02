@@ -1,7 +1,3 @@
-#define _IR_ENABLE_DEFAULT_ false
-#define SEND_ELECTRA_AC true
-#define DECODE_ELECTRA_AC false
-
 #include "electra.h"
 #include "esphome/core/log.h"
 
@@ -10,29 +6,29 @@ namespace electra {
 
 static const char *const TAG = "electra.climate";
 
-const uint16_t kElectraAcHdrMark = 9166;
-const uint16_t kElectraAcBitMark = 646;
-const uint16_t kElectraAcHdrSpace = 4470;
-const uint16_t kElectraAcOneSpace = 1647;
-const uint16_t kElectraAcZeroSpace = 547;
-const uint32_t kElectraAcMessageGap = 100000;  // Just a guess.
-const uint8_t kElectraAcStateLength = 13;
-
 void ElectraClimate::setup() {
   climate_ir::ClimateIR::setup();
-  if (this->sensor_) {
-    this->sensor_->add_on_state_callback([this](float state) {
-      this->current_temperature = state;
+  this->stateReset();
+  // if (this->sensor_) {
+  //   this->sensor_->add_on_state_callback([this](float state) {
+  //     this->current_temperature = state;
 
-      // if (this->mode == climate::CLIMATE_MODE_OFF) {
-      //   return;
-      // }
+  //     // if (this->mode == climate::CLIMATE_MODE_OFF) {
+  //     //   return;
+  //     // }
 
-      // ESP_LOGD(TAG, "temp sensor state callback");
+  //     // ESP_LOGD(TAG, "temp sensor state callback");
 
-      // this->do_transmit(true);
-    });
-  }
+  //     // this->do_transmit(true);
+  //   });
+  // }
+}
+
+void ElectraClimate::stateReset(void) {
+  for (uint8_t i = 1; i < kElectraAcStateLength - 2; i++) proto.raw[i] = 0;
+  proto.raw[0] = 0xC3;
+  proto.LightToggle = kElectraAcLightToggleOff;
+  // [12] is the checksum.
 }
 
 void ElectraClimate::transmit_state() {
@@ -40,96 +36,86 @@ void ElectraClimate::transmit_state() {
 }
 
 void ElectraClimate::do_transmit(bool sensor_update) {
-  ac->stateReset();
-
-  ac->setPower(true);
-
   // Set mode
+  this->proto.Power = true;
+
   switch (this->mode) {
     case climate::CLIMATE_MODE_AUTO:
     case climate::CLIMATE_MODE_HEAT_COOL:
-      ac->setMode(kElectraAcAuto);
+      this->setMode(kElectraAcAuto);
       break;
     case climate::CLIMATE_MODE_COOL:
-      ac->setMode(kElectraAcCool);
+      this->setMode(kElectraAcCool);
       break;
     case climate::CLIMATE_MODE_HEAT:
-      ac->setMode(kElectraAcHeat);
+      this->setMode(kElectraAcHeat);
       break;
     case climate::CLIMATE_MODE_DRY:
-      ac->setMode(kElectraAcDry);
+      this->setMode(kElectraAcDry);
       break;
     case climate::CLIMATE_MODE_FAN_ONLY:
-      ac->setMode(kElectraAcFan);
+      this->setMode(kElectraAcFan);
       break;
     case climate::CLIMATE_MODE_OFF:
     default:
-      ac->setPower(false);
+      this->proto.Power = false;
       break;
   }
 
-  if (this->preset.has_value()) {
-    switch (this->preset.value()) {
-      case climate::CLIMATE_PRESET_BOOST:
-        ac->setTurbo(true);
-        break;
-      case climate::CLIMATE_PRESET_NONE:
-      default:
-        ac->setTurbo(false);
-    }
-  } else {
-    ac->setTurbo(false);
+  switch (this->preset.has_value() && this->preset.value()) {
+    case climate::CLIMATE_PRESET_BOOST:
+      this->proto.Turbo = true;
+      break;
+    case climate::CLIMATE_PRESET_NONE:
+    default:
+      this->proto.Turbo = false;
   }
 
-  ac->setTemp(this->target_temperature);
+  this->setTemp(this->target_temperature);
 
   switch (this->fan_mode.value()) {
     case climate::CLIMATE_FAN_HIGH:
-      ac->setFan(kElectraAcFanHigh);
+      this->setFan(kElectraAcFanHigh);
       break;
     case climate::CLIMATE_FAN_MEDIUM:
-      ac->setFan(kElectraAcFanMed);
+      this->setFan(kElectraAcFanMed);
       break;
     case climate::CLIMATE_FAN_LOW:
-      ac->setFan(kElectraAcFanLow);
+      this->setFan(kElectraAcFanLow);
       break;
     case climate::CLIMATE_FAN_AUTO:
     default:
-      ac->setFan(kElectraAcFanAuto);
+      this->setFan(kElectraAcFanAuto);
   }
-
-  ac->setSwingH(false);
 
   if (this->swing_mode == climate::CLIMATE_SWING_VERTICAL) {
-    ac->setSwingV(true);
+    this->setSwingV(true);
   } else {
-    ac->setSwingV(false);
+    this->setSwingV(false);
   }
 
-  if (ac->getPower() || poweredOn) {
-    poweredOn = ac->getPower();
-  } else {
+  if (!this->proto.Power) {
     return;
   }
 
-  if (sensor_update) {
-      uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
-      ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
+  // if (sensor_update) {
+  //     uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
+  //     ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
 
-      ac->setIFeel(true);
-      ac->setSensorUpdate(true);
-      ac->setSensorTemp(t);
-  } else {
-      ac->setIFeel(false);
-      ac->setSensorUpdate(false);
-  }
+  //     ac->setIFeel(true);
+  //     ac->setSensorUpdate(true);
+  //     ac->setSensorTemp(t);
+  // } else {
+      // ac->setIFeel(false);
+      // ac->setSensorUpdate(false);
+  // }
 
   auto transmit = this->transmitter_->transmit();
   auto *data = transmit.get_data();
   data->set_carrier_frequency(38000);
 
-  ESP_LOGD(TAG, "ac ir remote state %s", this->ac->toString().c_str());
-  uint8_t *message = this->ac->getRaw();
+  ESP_LOGD(TAG, "ac ir remote state %s", this->toString().c_str());
+  uint8_t *message = this->getRaw();
 
   data->mark(kElectraAcHdrMark);
   data->space(kElectraAcHdrSpace);
@@ -158,6 +144,92 @@ void ElectraClimate::do_transmit(bool sensor_update) {
   data->space(kElectraAcMessageGap);
 
   transmit.perform();
+}
+
+void ElectraClimate::setMode(const uint8_t mode) {
+  switch (mode) {
+    case kElectraAcAuto:
+    case kElectraAcDry:
+    case kElectraAcCool:
+    case kElectraAcHeat:
+    case kElectraAcFan:
+      proto.Mode = mode;
+      break;
+    default:
+      // If we get an unexpected mode, default to AUTO.
+      proto.Mode = kElectraAcAuto;
+  }
+}
+
+void ElectraClimate::setTemp(const uint8_t temp) {
+  uint8_t newtemp = std::max(kElectraAcMinTemp, temp);
+  newtemp = std::min(kElectraAcMaxTemp, newtemp) - kElectraAcTempDelta;
+  proto.Temp = newtemp;
+}
+
+void ElectraClimate::setFan(const uint8_t speed) {
+  switch (speed) {
+    case kElectraAcFanAuto:
+    case kElectraAcFanHigh:
+    case kElectraAcFanMed:
+    case kElectraAcFanLow:
+      proto.Fan = speed;
+      break;
+    default:
+      // If we get an unexpected speed, default to Auto.
+      proto.Fan = kElectraAcFanAuto;
+  }
+}
+
+void ElectraClimate::setSwingV(const bool on) {
+  proto.SwingV = (on ? kElectraAcSwingOn : kElectraAcSwingOff);
+}
+
+uint8_t *ElectraClimate::getRaw(void) {
+  checksum();
+  return proto.raw;
+}
+
+void ElectraClimate::checksum(uint16_t length) {
+  if (length < 2) return;
+  proto.Sum = calcChecksum(proto.raw, length);
+}
+
+uint8_t ElectraClimate::calcChecksum(const uint8_t state[], const uint16_t length) {
+  if (length == 0) return state[0];
+  return sumBytes(state, length - 1);
+}
+
+// uint8_t ElectraClimate::sumBytes(const uint8_t * const start, const uint16_t length, const uint8_t init) {
+//   uint8_t checksum = init;
+//   const uint8_t *ptr;
+//   for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
+//   return checksum;
+// }
+
+String ElectraClimate::toString(void) const {
+  String result = "";
+  result.reserve(160);  // Reserve some heap for the string to reduce fragging.
+  if (!proto.SensorUpdate) {
+    result += irutils::addBoolToString(proto.Power, "Power", false);
+    result += irutils::addModeToString(proto.Mode, kElectraAcAuto, kElectraAcCool,
+                              kElectraAcHeat, kElectraAcDry, kElectraAcFan);
+    result += irutils::addTempToString(proto.Temp + kElectraAcTempDelta);
+    result += irutils::addFanToString(proto.Fan, kElectraAcFanHigh, kElectraAcFanLow,
+                             kElectraAcFanAuto, kElectraAcFanAuto,
+                             kElectraAcFanMed);
+    result += irutils::addBoolToString(!proto.SwingV, "SwingV");
+    // result += irutils::addBoolToString(!proto.SwingH, kSwingHStr);
+    // result += irutils::addToggleToString(getLightToggle(), kLightStr);
+    // result += irutils::addBoolToString(proto.Clean, kCleanStr);
+    result += irutils::addBoolToString(proto.Turbo, "Turbo");
+    // result += irutils::addBoolToString(proto.IFeel, kIFeelStr);
+  }
+  // if (proto.IFeel || proto.SensorUpdate) {
+  //   result += addIntToString(getSensorTemp(), kSensorTempStr, !proto.SensorUpdate);
+  //   result += 'C';
+  // }
+  return result;
 }
 
 }  // namespace electra

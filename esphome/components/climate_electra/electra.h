@@ -10,11 +10,11 @@ namespace electra {
 class ElectraClimate : public climate_ir::ClimateIR {
  public:
   // Temperature
-  const float ELECTRA_TEMP_MAX = 30.0;
-  const float ELECTRA_TEMP_MIN = 19.0;
+  // const float ELECTRA_TEMP_MAX = 30.0;
+  // const float ELECTRA_TEMP_MIN = 19.0;
 
   ElectraClimate()
-      : climate_ir::ClimateIR(ELECTRA_TEMP_MIN, ELECTRA_TEMP_MAX, 1.0f, true, true,
+      : climate_ir::ClimateIR(19.0f, 30.0f, 1.0f, true, true,
                               {climate::CLIMATE_FAN_AUTO, climate::CLIMATE_FAN_LOW, climate::CLIMATE_FAN_MEDIUM,
                                climate::CLIMATE_FAN_HIGH},
                               {climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL},

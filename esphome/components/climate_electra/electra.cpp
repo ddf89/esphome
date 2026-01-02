@@ -62,14 +62,16 @@ void ElectraClimate::do_transmit(bool sensor_update) {
       break;
   }
 
-  switch (this->preset.has_value() && this->preset.value()) {
-    case climate::CLIMATE_PRESET_BOOST:
-      this->proto.Turbo = true;
-      break;
-    case climate::CLIMATE_PRESET_NONE:
-    default:
-      this->proto.Turbo = false;
-  }
+  // if (this->preset.has_value()){
+    switch (this->preset.value()) {
+      case climate::CLIMATE_PRESET_BOOST:
+        this->proto.Turbo = true;
+        break;
+      case climate::CLIMATE_PRESET_NONE:
+      default:
+        this->proto.Turbo = false;
+    }
+  // }
 
   this->setTemp(this->target_temperature);
 

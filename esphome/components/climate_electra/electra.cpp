@@ -9,19 +9,19 @@ static const char *const TAG = "electra.climate";
 void ElectraClimate::setup() {
   climate_ir::ClimateIR::setup();
   this->stateReset();
-  // if (this->sensor_) {
-  //   this->sensor_->add_on_state_callback([this](float state) {
-  //     this->current_temperature = state;
+  if (this->sensor_) {
+    this->sensor_->add_on_state_callback([this](float state) {
+      this->current_temperature = state;
 
-  //     // if (this->mode == climate::CLIMATE_MODE_OFF) {
-  //     //   return;
-  //     // }
+      // if (this->mode == climate::CLIMATE_MODE_OFF) {
+      //   return;
+      // }
 
-  //     // ESP_LOGD(TAG, "temp sensor state callback");
+      // ESP_LOGD(TAG, "temp sensor state callback");
 
-  //     // this->do_transmit(true);
-  //   });
-  // }
+      // this->do_transmit(true);
+    });
+  }
 }
 
 void ElectraClimate::stateReset(void) {

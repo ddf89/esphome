@@ -37,7 +37,8 @@ void ElectraClimate::transmit_state() {
 
 void ElectraClimate::do_transmit(bool sensor_update) {
   // Set mode
-  this->proto.Power = true;
+  bool currentState = proto.Power;
+  proto.Power = true;
 
   switch (this->mode) {
     case climate::CLIMATE_MODE_AUTO:
@@ -96,7 +97,7 @@ void ElectraClimate::do_transmit(bool sensor_update) {
     this->setSwingV(false);
   }
 
-  if (!this->proto.Power) {
+  if (!this->proto.Power && this->proto.Power != currentState) {
     return;
   }
 

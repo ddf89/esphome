@@ -202,36 +202,15 @@ uint8_t ElectraClimate::calcChecksum(const uint8_t state[], const uint16_t lengt
   return sumBytes(state, length - 1);
 }
 
-// uint8_t ElectraClimate::sumBytes(const uint8_t * const start, const uint16_t length, const uint8_t init) {
-//   uint8_t checksum = init;
-//   const uint8_t *ptr;
-//   for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
-//   return checksum;
-// }
+uint8_t ElectraClimate::sumBytes(const uint8_t * const start, const uint16_t length, const uint8_t init) {
+  uint8_t checksum = init;
+  const uint8_t *ptr;
+  for (ptr = start; ptr - start < length; ptr++) checksum += *ptr;
+  return checksum;
+}
 
-String ElectraClimate::toString(void) const {
-  String result = "";
-  result.reserve(160);  // Reserve some heap for the string to reduce fragging.
-  if (!proto.SensorUpdate) {
-    result += irutils::addBoolToString(proto.Power, "Power", false);
-    result += irutils::addModeToString(proto.Mode, kElectraAcAuto, kElectraAcCool,
-                              kElectraAcHeat, kElectraAcDry, kElectraAcFan);
-    result += irutils::addTempToString(proto.Temp + kElectraAcTempDelta);
-    result += irutils::addFanToString(proto.Fan, kElectraAcFanHigh, kElectraAcFanLow,
-                             kElectraAcFanAuto, kElectraAcFanAuto,
-                             kElectraAcFanMed);
-    result += irutils::addBoolToString(!proto.SwingV, "SwingV");
-    // result += irutils::addBoolToString(!proto.SwingH, kSwingHStr);
-    // result += irutils::addToggleToString(getLightToggle(), kLightStr);
-    // result += irutils::addBoolToString(proto.Clean, kCleanStr);
-    result += irutils::addBoolToString(proto.Turbo, "Turbo");
-    // result += irutils::addBoolToString(proto.IFeel, kIFeelStr);
-  }
-  // if (proto.IFeel || proto.SensorUpdate) {
-  //   result += addIntToString(getSensorTemp(), kSensorTempStr, !proto.SensorUpdate);
-  //   result += 'C';
-  // }
-  return result;
+String ElectraClimate::toString(void) {
+    return str_sprintf("Power: %x", proto.Power).c_str();
 }
 
 }  // namespace electra

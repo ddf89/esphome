@@ -11,5 +11,5 @@ CONFIG_SCHEMA = climate_ir.climate_ir_with_receiver_schema(ElectraClimate)
 
 
 async def to_code(config):
-    cg.add_library(name="crankyoldgit/IRremoteESP8266", version="")
+    # cg.add_library(name="crankyoldgit/IRremoteESP8266", version="")
     await climate_ir.new_climate_ir(config)

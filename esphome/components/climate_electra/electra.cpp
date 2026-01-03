@@ -97,7 +97,7 @@ void ElectraClimate::do_transmit(bool sensor_update) {
     this->setSwingV(false);
   }
 
-  if (!this->proto.Power && this->proto.Power != currentState) {
+  if (!this->proto.Power && this->proto.Power == currentState) {
     return;
   }
 

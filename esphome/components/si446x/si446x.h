@@ -3,6 +3,7 @@
 #include <utility>
 #include <vector>
 #include <mem.h>
+#include <bitset>
 
 #include "esphome/core/component.h"
 #include "esphome/components/spi/spi.h"
@@ -35,10 +36,13 @@ class SI446xComponent : public spi::SPIDevice<spi::BIT_ORDER_LSB_FIRST, spi::CLO
 
   void set_sdn_pin(GPIOPin *sdn) { this->sdn_pin_ = sdn; }
   void set_nirq_pin(GPIOPin *nirq) { this->nirq_pin_ = nirq; }
-  void set_radio_config(std::vector<uint8_t> siconf) { this->siconfig_ = siconf; }
+  // void set_radio_config(std::vector<uint8_t> siconf) { this->siconfig_ = siconf; }
 
   void reset_radio();
   void send_init_config();
+  void toggleSdn();
+  void toggleCs();
+  void toggleIrq();
   void spi_send_command(std::vector<uint8_t> command, std::vector<uint8_t> extra_params);
   void spi_send(uint8_t command, void *out, uint8_t outlen);
   void spi_send(void *commandData, uint8_t len, void *out, uint8_t outlen);
@@ -49,7 +53,6 @@ class SI446xComponent : public spi::SPIDevice<spi::BIT_ORDER_LSB_FIRST, spi::CLO
  protected:
   GPIOPin *sdn_pin_;
   GPIOPin *nirq_pin_;
-  std::vector<uint8_t> siconfig_;
 };
 
 }  // namespace si446x

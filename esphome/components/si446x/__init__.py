@@ -25,7 +25,7 @@ CONFIG_SCHEMA = cv.All(
         spi.spi_device_schema(
             cs_pin_required=True,
             default_data_rate=1000000,
-            default_mode=spi.SPI_MODE_OPTIONS[3],
+            default_mode=spi.SPI_MODE_OPTIONS[0],
             mode=spi.TYPE_SINGLE,
         )
     )

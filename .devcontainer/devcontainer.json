@@ -16,6 +16,9 @@
     // , "--device=/dev/ttyACM0"
   ],
   "appPort": 6052,
+	"mounts": [
+		"source=/dev/,target=/dev/,type=bind,consistency=consistent"
+	],
   // if you are using avahi in the host device, uncomment these to allow the
   // devcontainer to find devices via mdns
   //"mounts": [

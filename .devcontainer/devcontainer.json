@@ -6,7 +6,10 @@
     "script/devcontainer-post-create"
   ],
   "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/stu-bell/devcontainer-features/claude-code:0": {
+      "version": "0.1.0"
+    }
   },
   "runArgs": [
     "--privileged",
@@ -86,5 +89,12 @@
         "C_Cpp.clang_format_path": "/usr/bin/clang-format-13"
       }
     }
-  }
+  },
+  "mounts": [
+    {
+      "source": "${localEnv:HOME}/.claude/.credentials.json",
+      "target": "/home/vscode/.claude/.credentials.json",
+      "type": "bind"
+    }
+  ]
 }

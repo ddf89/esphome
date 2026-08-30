@@ -112,15 +112,15 @@ void ElectraClimate::do_transmit(bool sensor_update) {
     return;
   }
 
+  ac->setIFeel(true);
+
   if (sensor_update) {
       uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
       ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
 
-      ac->setIFeel(true);
       ac->setSensorUpdate(true);
       ac->setSensorTemp(t);
   } else {
-      ac->setIFeel(false);
       ac->setSensorUpdate(false);
   }
 

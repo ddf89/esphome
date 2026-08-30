@@ -28,7 +28,7 @@ void ElectraClimate::setup() {
         return;
       }
 
-      ESP_LOGD(TAG, "temp sensor state callback");
+      // ESP_LOGD(TAG, "temp sensor state callback");
 
       this->do_transmit(true);
     });
@@ -42,92 +42,93 @@ void ElectraClimate::transmit_state() {
 void ElectraClimate::do_transmit(bool sensor_update) {
   ac->stateReset();
 
-  ac->setPower(true);
-
-  // Set mode
-  switch (this->mode) {
-    case climate::CLIMATE_MODE_AUTO:
-    case climate::CLIMATE_MODE_HEAT_COOL:
-      ac->setMode(kElectraAcAuto);
-      break;
-    case climate::CLIMATE_MODE_COOL:
-      ac->setMode(kElectraAcCool);
-      break;
-    case climate::CLIMATE_MODE_HEAT:
-      ac->setMode(kElectraAcHeat);
-      break;
-    case climate::CLIMATE_MODE_DRY:
-      ac->setMode(kElectraAcDry);
-      break;
-    case climate::CLIMATE_MODE_FAN_ONLY:
-      ac->setMode(kElectraAcFan);
-      break;
-    case climate::CLIMATE_MODE_OFF:
-    default:
-      ac->setPower(false);
-      break;
-  }
-
-  if (this->preset.has_value()) {
-    switch (this->preset.value()) {
-      case climate::CLIMATE_PRESET_BOOST:
-        ac->setTurbo(true);
-        break;
-      case climate::CLIMATE_PRESET_NONE:
-      default:
-        ac->setTurbo(false);
-    }
-  } else {
-    ac->setTurbo(false);
-  }
-
-  ac->setTemp(this->target_temperature);
-
-  switch (this->fan_mode.value()) {
-    case climate::CLIMATE_FAN_HIGH:
-      ac->setFan(kElectraAcFanHigh);
-      break;
-    case climate::CLIMATE_FAN_MEDIUM:
-      ac->setFan(kElectraAcFanMed);
-      break;
-    case climate::CLIMATE_FAN_LOW:
-      ac->setFan(kElectraAcFanLow);
-      break;
-    case climate::CLIMATE_FAN_AUTO:
-    default:
-      ac->setFan(kElectraAcFanAuto);
-  }
-
-  ac->setSwingH(false);
-
-  if (this->swing_mode == climate::CLIMATE_SWING_VERTICAL) {
-    ac->setSwingV(true);
-  } else {
-    ac->setSwingV(false);
-  }
-
-  if (ac->getPower() || poweredOn) {
-    poweredOn = ac->getPower();
-  } else {
-    return;
-  }
-
   ac->setIFeel(true);
-  ac->setSensorUpdate(false);
 
   uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
   ac->setSensorTemp(t);
 
   if (sensor_update) {
-      ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
-      ac->setSensorUpdate(true);
+    // ESP_LOGD(TAG, "Sending iFeel sensor update %d", t);
+    ac->setSensorUpdate(true);
+  } else {
+    ac->setSensorUpdate(false);
+
+    ac->setPower(true);
+
+    // Set mode
+    switch (this->mode) {
+      case climate::CLIMATE_MODE_AUTO:
+      case climate::CLIMATE_MODE_HEAT_COOL:
+        ac->setMode(kElectraAcAuto);
+        break;
+      case climate::CLIMATE_MODE_COOL:
+        ac->setMode(kElectraAcCool);
+        break;
+      case climate::CLIMATE_MODE_HEAT:
+        ac->setMode(kElectraAcHeat);
+        break;
+      case climate::CLIMATE_MODE_DRY:
+        ac->setMode(kElectraAcDry);
+        break;
+      case climate::CLIMATE_MODE_FAN_ONLY:
+        ac->setMode(kElectraAcFan);
+        break;
+      case climate::CLIMATE_MODE_OFF:
+      default:
+        ac->setPower(false);
+        break;
+    }
+
+    if (this->preset.has_value()) {
+      switch (this->preset.value()) {
+        case climate::CLIMATE_PRESET_BOOST:
+          ac->setTurbo(true);
+          break;
+        case climate::CLIMATE_PRESET_NONE:
+        default:
+          ac->setTurbo(false);
+      }
+    } else {
+      ac->setTurbo(false);
+    }
+
+    ac->setTemp(this->target_temperature);
+
+    switch (this->fan_mode.value()) {
+      case climate::CLIMATE_FAN_HIGH:
+        ac->setFan(kElectraAcFanHigh);
+        break;
+      case climate::CLIMATE_FAN_MEDIUM:
+        ac->setFan(kElectraAcFanMed);
+        break;
+      case climate::CLIMATE_FAN_LOW:
+        ac->setFan(kElectraAcFanLow);
+        break;
+      case climate::CLIMATE_FAN_AUTO:
+      default:
+        ac->setFan(kElectraAcFanAuto);
+    }
+
+    ac->setSwingH(false);
+
+    if (this->swing_mode == climate::CLIMATE_SWING_VERTICAL) {
+      ac->setSwingV(true);
+    } else {
+      ac->setSwingV(false);
+    }
+
+    if (ac->getPower() || poweredOn) {
+      poweredOn = ac->getPower();
+    } else {
+      return;
+    }
   }
 
   auto transmit = this->transmitter_->transmit();
   auto *data = transmit.get_data();
   data->set_carrier_frequency(38000);
 
-  ESP_LOGD(TAG, "ac ir remote state %s", this->ac->toString().c_str());
+  ESP_LOGD(TAG, "AC IR payload:\n%s", this->ac->toString().c_str());
   uint8_t *message = this->ac->getRaw();
 
   data->mark(kElectraAcHdrMark);

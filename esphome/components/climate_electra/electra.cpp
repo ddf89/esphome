@@ -128,7 +128,9 @@ void ElectraClimate::do_transmit(bool sensor_update) {
   auto *data = transmit.get_data();
   data->set_carrier_frequency(38000);
 
-  ESP_LOGD(TAG, "AC IR payload:\n%s", this->ac->toString().c_str());
+  ESP_LOGD(TAG, "AC IR payload:");
+  ESP_LOGD(TAG, "%s", this->ac->toString().c_str());
+
   uint8_t *message = this->ac->getRaw();
 
   data->mark(kElectraAcHdrMark);

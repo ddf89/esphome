@@ -44,7 +44,7 @@ void ElectraClimate::do_transmit(bool sensor_update) {
 
   ac->setIFeel(true);
 
-  uint8_t t = uint8_t(lround(this->current_temperature + 0.5));
+  uint8_t t = uint8_t(lround(this->current_temperature));
   ac->setSensorTemp(t);
 
   if (sensor_update) {
